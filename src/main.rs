@@ -5,6 +5,8 @@ trait Currency {
     type Value;
     fn to_normal(&self) -> f32;
     fn from_normal(f32) -> Self::Value;
+    fn to<C: Currency>(&self) -> <C as Currency>::Value;
+    fn from<C: Currency>(other: C) -> Self::Value;
 }
 
 macro_rules! currency {
@@ -14,8 +16,22 @@ macro_rules! currency {
 
         impl Currency for $t {
             type Value = $t;
-            fn to_normal(&self) -> f32 { self.0 * $c }
-            fn from_normal(n: f32) -> Self::Value { $t(n / $c) }
+
+            fn to_normal(&self) -> f32 {
+                self.0 * $c
+            }
+
+            fn from_normal(n: f32) -> Self::Value {
+                $t(n / $c)
+            }
+
+            fn to<C: Currency>(&self) -> <C as Currency>::Value {
+                C::from_normal(self.to_normal())
+            }
+
+            fn from<C: Currency>(other: C) -> Self::Value {
+                Self::from_normal(other.to_normal())
+            }
         }
 
         impl<C: Currency> ops::Add<C> for $t {
@@ -43,4 +59,6 @@ fn main() {
 
     println!("{}", x + y);
     println!("{}", y + x);
+    println!("{}", x.to::<CBills>());
+    println!("{}", y.to::<Credits>());
 }
