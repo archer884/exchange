@@ -1,9 +1,18 @@
+#![feature(associated_consts)]
+
 use std::fmt;
 use std::ops;
 
 trait Currency {
     type Value;
-    fn to_normal(&self) -> f32;
+    const factor: f32;
+
+    fn value(&self) -> f32;
+
+    fn to_normal(&self) -> f32 {
+        self.value() * Self::factor
+    }
+
     fn from_normal(f32) -> Self::Value;
     fn to<C: Currency>(&self) -> <C as Currency>::Value;
 }
@@ -15,6 +24,11 @@ macro_rules! currency {
 
         impl Currency for $t {
             type Value = $t;
+            const factor: f32 = $c;
+
+            fn value(&self) -> f32 {
+                self.0
+            }
 
             fn to_normal(&self) -> f32 {
                 self.0 * $c
